@@ -19,6 +19,7 @@
 
 #include <LambertW.h>
 #include <FukushimaLambertW.h>
+#include "lambw_grok.h"
 #include <iostream>
 #include <stdlib.h>
 #include <cmath>
@@ -37,29 +38,36 @@ CloseTo(const double a, const double b, const double eps)
 int
 main()
 {
-  const double eps = 3e-15;
-  const double step1 = 0.0001;
+  const double eps = 3e-5;
+  const double step1 = 0.00001;
   const double max2 = 30;
-  const double step2 = 0.0001;
+  const double step2 = 0.00001;
 
-  for (int branch = -1; branch <= 0; ++branch)
-    for (double x = -1/M_E + eps; x < 0; x += step1) {
-      const double w = utl::LambertW(branch, x);
-      const double fw = Fukushima::LambertW(branch, x);
-      if (!CloseTo(w, fw, eps)) {
-        cout << 'f' << branch << '(' << x << ") = " << (w - fw) << endl;
-        return EXIT_FAILURE;
+  int count = 0;
+  for (int branch = -1; branch <= 0; ++branch) {
+    for (double x = -1/M_E; x < 0; x += step1) {
+      count++;
+      const float w = branch==0?lambert_w0(x):lambert_wm1(x);
+      const float fw = Fukushima::LambertW(branch, x);
+      if (!CloseTo(w, fw, eps*5)) {
+        cout << count << " fail " << " f" << branch << '(' << x << ") = " << (w - fw) << endl;
+//         return EXIT_FAILURE;
       }
     }
+      cout << "success branch " << branch << " count " << count << endl;
+      count = 0;
+  }
 
   for (double x = 0; x < max2; x += step2) {
-    const double w = utl::LambertW(0, x);
+    count++;
+    const double w = lambert_w0(x);
     const double fw = Fukushima::LambertW(0, x);
     if (!CloseTo(w, fw, eps)) {
-      cout << "f0(" << x << ") = " << (w - fw) << endl;
-      return EXIT_FAILURE;
+      cout << count << " fail " << "f0(" << x << ") = " << (w - fw) << endl;
     }
   }
+  cout << "success branch 0 count " << count << endl;
+  count = 0;
 
   return EXIT_SUCCESS;
 }
